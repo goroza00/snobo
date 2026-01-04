@@ -37,7 +37,6 @@ export function createRenderer(canvas, state) {
   function drawSlope() {
     const { laneLeft, laneRight, laneWidth } = state.world;
 
-    // lane base
     const grd = ctx.createLinearGradient(0, 0, 0, H);
     grd.addColorStop(0, 'rgba(255,255,255,0.98)');
     grd.addColorStop(1, 'rgba(210,245,255,0.98)');
@@ -51,7 +50,6 @@ export function createRenderer(canvas, state) {
     ctx.closePath();
     ctx.fill();
 
-    // borders
     ctx.strokeStyle = 'rgba(0,0,0,0.22)';
     ctx.lineWidth = 6;
     ctx.beginPath();
@@ -61,7 +59,6 @@ export function createRenderer(canvas, state) {
     ctx.lineTo(laneRight + 140, H);
     ctx.stroke();
 
-    // snow streaks
     const s = state.game.speed;
     ctx.strokeStyle = 'rgba(0,0,0,0.05)';
     ctx.lineWidth = 3;
@@ -82,8 +79,7 @@ export function createRenderer(canvas, state) {
     if (o.type === 'tree') {
       ctx.fillStyle = o.hit ? 'rgba(140, 90, 50, 0.45)' : 'rgba(140, 90, 50, 0.95)';
       drawRoundedRect(ctx, o.x - o.size * 0.12, o.y + o.size * 0.15, o.size * 0.24, o.size * 0.42, 6);
-      ctx.fill();
-      ctx.stroke();
+      ctx.fill(); ctx.stroke();
 
       ctx.fillStyle = o.hit ? 'rgba(60, 160, 90, 0.35)' : 'rgba(30, 170, 90, 0.95)';
       ctx.beginPath();
@@ -91,29 +87,25 @@ export function createRenderer(canvas, state) {
       ctx.lineTo(o.x - o.size * 0.62, o.y + o.size * 0.25);
       ctx.lineTo(o.x + o.size * 0.62, o.y + o.size * 0.25);
       ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+      ctx.fill(); ctx.stroke();
 
       ctx.beginPath();
       ctx.moveTo(o.x, o.y - o.size * 0.25);
       ctx.lineTo(o.x - o.size * 0.52, o.y + o.size * 0.6);
       ctx.lineTo(o.x + o.size * 0.52, o.y + o.size * 0.6);
       ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+      ctx.fill(); ctx.stroke();
     } else if (o.type === 'rock') {
       ctx.fillStyle = o.hit ? 'rgba(120,120,130,0.45)' : 'rgba(110,110,130,0.95)';
       ctx.beginPath();
       ctx.ellipse(o.x, o.y, o.size * 0.55, o.size * 0.40, o.drift * 0.02, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      ctx.fill(); ctx.stroke();
 
       ctx.fillStyle = 'rgba(255,255,255,0.45)';
       ctx.beginPath();
       ctx.ellipse(o.x - o.size*0.12, o.y - o.size*0.1, o.size*0.18, o.size*0.12, 0, 0, Math.PI*2);
       ctx.fill();
     } else {
-      // flag
       ctx.strokeStyle = 'rgba(0,0,0,0.8)';
       ctx.lineWidth = 6;
       ctx.beginPath();
@@ -129,8 +121,7 @@ export function createRenderer(canvas, state) {
       ctx.lineTo(o.x + o.size*0.72, o.y - o.size*0.38);
       ctx.lineTo(o.x, o.y - o.size*0.16);
       ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+      ctx.fill(); ctx.stroke();
     }
 
     ctx.fillStyle = 'rgba(0,0,0,0.14)';
@@ -141,38 +132,30 @@ export function createRenderer(canvas, state) {
 
   function drawPlayer() {
     const p = state.player;
-    const blink = p.invuln > 0 && (Math.floor(state.game.time * 16) % 2 === 0);
-    if (blink) return;
 
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.rotate(p.tilt);
 
-    // board
     ctx.lineWidth = 6;
     ctx.strokeStyle = 'rgba(0,0,0,0.8)';
     ctx.fillStyle = 'rgba(255, 60, 60, 0.95)';
     drawRoundedRect(ctx, -44, 10, 88, 18, 10);
-    ctx.fill();
-    ctx.stroke();
+    ctx.fill(); ctx.stroke();
 
-    // rider
     ctx.fillStyle = 'rgba(30, 80, 220, 0.95)';
     ctx.strokeStyle = 'rgba(0,0,0,0.8)';
     ctx.lineWidth = 6;
     ctx.beginPath();
     ctx.arc(0, -12, 18, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+    ctx.fill(); ctx.stroke();
 
-    // goggles shine
     ctx.fillStyle = 'rgba(255,255,255,0.85)';
     ctx.beginPath();
     ctx.arc(-6, -16, 3, 0, Math.PI * 2);
     ctx.arc(6, -16, 3, 0, Math.PI * 2);
     ctx.fill();
 
-    // scarf
     ctx.strokeStyle = 'rgba(255, 200, 50, 0.95)';
     ctx.lineWidth = 6;
     ctx.lineCap = 'round';
@@ -207,22 +190,18 @@ export function createRenderer(canvas, state) {
     state.particles = ps.filter(p => p.t < p.life);
   }
 
-  // =============================
-  // ここが変更点：長いゴール + ゴールテープ
-  // =============================
+  // 長いゴール + ゴールテープ
   function drawGoalGateWithTape() {
     const progress = clamp(state.game.distance / state.game.GOAL_DISTANCE, 0, 1);
     if (progress <= 0.82 || state.game.gameOver) return;
 
-    // 近づくほど大きく見える
     const t = clamp((progress - 0.82) / 0.18, 0, 1);
 
     const gx = W / 2;
     const gy = H * (0.10 + (1 - t) * 0.05);
 
-    // “長く”＝横幅をさらに広げる（laneWidthの0.95〜1.10）
     const laneW = state.world.laneWidth;
-    const gateW = laneW * (0.95 + t * 0.15); // 最大 1.10 * laneWidth
+    const gateW = laneW * (0.95 + t * 0.15);
     const poleH = 120 + t * 70;
     const poleW = 18;
     const baseY = gy + 10;
@@ -230,42 +209,29 @@ export function createRenderer(canvas, state) {
     const leftX = gx - gateW / 2;
     const rightX = gx + gateW / 2;
 
-    // poles
     ctx.save();
     ctx.lineJoin = 'round';
     ctx.strokeStyle = 'rgba(0,0,0,0.9)';
     ctx.lineWidth = 7;
 
-    // 左ポール
     ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     drawRoundedRect(ctx, leftX - poleW/2, baseY, poleW, poleH, 10);
-    ctx.fill();
-    ctx.stroke();
-
-    // 右ポール
+    ctx.fill(); ctx.stroke();
     drawRoundedRect(ctx, rightX - poleW/2, baseY, poleW, poleH, 10);
-    ctx.fill();
-    ctx.stroke();
+    ctx.fill(); ctx.stroke();
 
-    // pole caps
     ctx.fillStyle = 'rgba(255, 60, 60, 0.95)';
     drawRoundedRect(ctx, leftX - poleW/2 - 2, baseY - 18, poleW + 4, 18, 10);
-    ctx.fill();
-    ctx.stroke();
+    ctx.fill(); ctx.stroke();
     drawRoundedRect(ctx, rightX - poleW/2 - 2, baseY - 18, poleW + 4, 18, 10);
-    ctx.fill();
-    ctx.stroke();
+    ctx.fill(); ctx.stroke();
 
-    // =============================
-    // Goal Tape（波打つテープ）
-    // =============================
+    // tape
     const tapeY = baseY + 24;
     const tapeH = 28 + t * 8;
 
-    // 波（風でヒラヒラ）
     const wave = Math.sin(state.game.time * 6) * (6 + t * 4);
 
-    // テープ形状（ベジェ曲線）
     const x0 = leftX + poleW * 0.3;
     const x1 = rightX - poleW * 0.3;
     const midX = (x0 + x1) / 2;
@@ -285,7 +251,7 @@ export function createRenderer(canvas, state) {
 
     // tape body
     ctx.globalAlpha = 1;
-    ctx.strokeStyle = 'rgba(255, 205, 50, 0.98)'; // 黄色いテープ
+    ctx.strokeStyle = 'rgba(255, 205, 50, 0.98)';
     ctx.lineWidth = tapeH;
     ctx.beginPath();
     ctx.moveTo(x0, y0);
@@ -300,14 +266,12 @@ export function createRenderer(canvas, state) {
     ctx.quadraticCurveTo(midX, midY, x1, y1);
     ctx.stroke();
 
-    // tape text (pixel-ish)
     ctx.fillStyle = 'rgba(0,0,0,0.9)';
     ctx.font = '900 22px ui-monospace, monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('GOAL!', gx, tapeY + 2);
 
-    // knot / fasteners (テープ留め)
     ctx.fillStyle = 'rgba(0,0,0,0.85)';
     ctx.beginPath();
     ctx.arc(x0, y0, 6, 0, Math.PI * 2);
@@ -317,53 +281,122 @@ export function createRenderer(canvas, state) {
     ctx.restore();
   }
 
+  // クラッシュ破片
+  function drawDebris() {
+    const g = state.game;
+    if (!g.debris || g.debris.length === 0) return;
+
+    for (const d of g.debris) {
+      const a = 1 - (d.t / d.life);
+      if (a <= 0) continue;
+
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.translate(d.x, d.y);
+      ctx.rotate(d.rot);
+
+      ctx.fillStyle = 'rgba(255, 60, 60, 0.95)'; // board piece
+      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+      ctx.lineWidth = 4;
+
+      const s = d.size;
+      ctx.beginPath();
+      ctx.rect(-s, -s*0.45, s*2, s*0.9);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+  }
+
   function drawBanner(text, sub) {
-    const bw = W * 0.72, bh = 150;
+    const bw = W * 0.74, bh = 160;
     const bx = (W - bw) / 2, by = H * 0.18;
 
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
     drawRoundedRect(ctx, bx + 10, by + 10, bw, bh, 16);
     ctx.fill();
 
-    ctx.fillStyle = 'rgba(255,255,255,0.95)';
-    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillStyle = 'rgba(255,255,255,0.96)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.88)';
     ctx.lineWidth = 8;
     drawRoundedRect(ctx, bx, by, bw, bh, 16);
-    ctx.fill();
-    ctx.stroke();
+    ctx.fill(); ctx.stroke();
 
-    ctx.fillStyle = 'rgba(0,0,0,0.92)';
+    ctx.fillStyle = 'rgba(0,0,0,0.93)';
     ctx.font = '900 58px ui-monospace, monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, W/2, by + 60);
+    ctx.fillText(text, W/2, by + 62);
 
     ctx.fillStyle = 'rgba(0,0,0,0.72)';
     ctx.font = '900 22px ui-monospace, monospace';
-    ctx.fillText(sub, W/2, by + 112);
+    ctx.fillText(sub, W/2, by + 118);
   }
 
   function render(dt) {
-    ctx.clearRect(0, 0, W, H);
+    // 画面揺れ（ゲームオーバー時）
+    const g = state.game;
+    const shake = g.shake ?? 0;
+    let sx = 0, sy = 0;
+    if (shake > 0) {
+      const amp = 16 * shake;
+      sx = (Math.random() * 2 - 1) * amp;
+      sy = (Math.random() * 2 - 1) * amp;
+    }
+
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, sx, sy);
+
+    ctx.clearRect(-100, -100, W + 200, H + 200);
 
     drawRetroSky();
     drawSlope();
-
-    // ★ゴール（長い＋テープ）
     drawGoalGateWithTape();
 
     for (const o of state.obstacles) drawObstacle(o);
+
+    // ゲームオーバー時はプレイヤー残しても良いが、クラッシュ感優先でそのまま描画
     drawPlayer();
     if (dt > 0) drawParticles(dt);
 
-    if (!state.game.running) {
+    // debris overlay
+    drawDebris();
+
+    // 赤フラッシュ
+    if (g.flash > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.35 * g.flash;
+      ctx.fillStyle = 'rgba(255,0,0,1)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    // vignette
+    if (g.gameOver) {
+      ctx.save();
+      const vg = ctx.createRadialGradient(W/2, H/2, 120, W/2, H/2, 700);
+      vg.addColorStop(0, 'rgba(0,0,0,0)');
+      vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    ctx.restore();
+
+    // バナー（揺れの外で固定表示にしたい場合は transform 後に描く）
+    if (!g.running) {
       drawBanner('SNOW DODGE', 'ENTER / スタートで開始');
-    } else if (state.game.paused) {
+    } else if (g.paused) {
       drawBanner('PAUSED', 'P か 一時停止で再開');
-    } else if (state.game.finished) {
+    } else if (g.finished) {
       drawBanner('GOAL!', 'スタートでリスタート');
-    } else if (state.game.gameOver) {
-      drawBanner('GAME OVER', 'スタートでリスタート');
+    } else if (g.gameOver) {
+      // クラッシュ直後は「CRASH!」→少しして「GAME OVER」
+      const t = g.crashT ?? 0;
+      if (t < 0.75) drawBanner('CRASH!!', '障害物に当たった！');
+      else drawBanner('GAME OVER', 'スタートでリスタート');
     }
   }
 
