@@ -3,52 +3,65 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Snow Dodge（スノボ障害物回避）</title>
+  <title>Snow Dodge</title>
 
   <link rel="stylesheet" href="./styles.css" />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <meta name="theme-color" content="#146eff" />
+  <meta name="theme-color" content="#2563eb" />
 
-  <!-- iOS: ホーム画面追加時の見た目 -->
+  <!-- iOS PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </head>
 <body>
   <div id="wrap">
-    <header class="card">
-      <div class="titleRow">
-        <div class="title">🏂 Snow Dodge</div>
-        <div class="note">障害物をよけつつ <b>1000m</b> 先のゴールへ！</div>
+    <header class="hudBar">
+      <div class="hudLeft">
+        <div class="hudTitle">
+          <span class="badge">SNOW</span>
+          <span class="badge blue">DODGE</span>
+        </div>
+        <div class="hudHint">障害物をよけつつ <b>1000m</b> 先のゴールへ！</div>
       </div>
-      <div id="hud">
-        <div class="pill">距離: <span id="distance">0</span>m</div>
-        <div class="pill">速度: <span id="speed">0</span></div>
-        <div class="pill">HP: <span id="hp">0</span></div>
+
+      <div id="hud" class="hudRight">
+        <div class="hudBox">
+          <div class="hudLabel">DIST</div>
+          <div class="hudValue"><span id="distance">0</span>m</div>
+        </div>
+        <div class="hudBox">
+          <div class="hudLabel">SPD</div>
+          <div class="hudValue"><span id="speed">0</span></div>
+        </div>
+        <div class="hudBox">
+          <div class="hudLabel">HP</div>
+          <div class="hudValue"><span id="hp">0</span></div>
+        </div>
       </div>
     </header>
 
     <canvas id="game" width="1280" height="720" aria-label="Snowboard game canvas" role="img"></canvas>
 
-    <div id="controls" class="card">
+    <div id="controls" class="panel">
       <div class="row">
         <div class="note">
-          操作: <b>← →</b> / <b>A D</b>（移動）・<b>Space</b>（ブースト）・<b>P</b>（一時停止）
-          <br/>スマホは下のボタンで左右、長押しで連続移動。
+          操作: <b>← →</b> / <b>A D</b>（移動）・<b>Space</b>（ブースト）・<b>P</b>（一時停止）・<b>Enter</b>（開始）<br>
+          スマホは下のボタンで左右、長押しで連続移動。
         </div>
         <div class="btnRow">
           <button class="btn primary" id="startBtn">スタート / リスタート</button>
-          <button class="btn" id="pauseBtn">一時停止</button>
+          <button class="btn pause" id="pauseBtn">一時停止</button>
           <button class="btn danger" id="muteBtn">効果音: ON</button>
         </div>
       </div>
 
-      <div id="touchPad">
-        <button class="btn" id="leftBtn">⬅ 左</button>
-        <button class="btn" id="rightBtn">右 ➡</button>
+      <div id="touchPad" class="touchPad">
+        <button class="btn dpad" id="leftBtn">左</button>
+        <button class="btn dpad" id="rightBtn">右</button>
       </div>
     </div>
   </div>
 
-  <script type="module" src="../src/main.js"></script>
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>
