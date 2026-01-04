@@ -4,7 +4,9 @@ export function createInput() {
 
   function onKeyDown(e) {
     const k = e.key.toLowerCase();
-    if (['arrowleft','arrowright','a','d',' ','p'].includes(k) || e.key === ' ') e.preventDefault();
+    if (['arrowleft','arrowright','a','d',' ','p','enter'].includes(k) || e.key === ' ') {
+      e.preventDefault();
+    }
     keys.add(k === ' ' ? 'space' : k);
   }
   function onKeyUp(e) {
@@ -12,7 +14,7 @@ export function createInput() {
     keys.delete(k === ' ' ? 'space' : k);
   }
 
-  window.addEventListener('keydown', onKeyDown, { passive: false });
+  window.addEventListener('keydown', onKeyDown, { passive:false });
   window.addEventListener('keyup', onKeyUp);
 
   function bindHold(btn, on, off) {
@@ -36,12 +38,9 @@ export function createInput() {
     get left()  { return keys.has('arrowleft') || keys.has('a') || touchLeft; },
     get right() { return keys.has('arrowright') || keys.has('d') || touchRight; },
     get boost() { return keys.has('space'); },
-    has(key) { return keys.has(key); },
-    clear() { keys.clear(); touchLeft = false; touchRight = false; },
+    get pausePressed() { return keys.has('p'); },
+    get enterPressed() { return keys.has('enter'); },
     attachTouchButtons,
-    dispose() {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-    }
+    clear() { keys.clear(); touchLeft = false; touchRight = false; },
   };
 }
