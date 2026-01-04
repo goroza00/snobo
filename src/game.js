@@ -28,15 +28,8 @@ export function createGame(canvas, sfx) {
       boost: 0,
       spawnTimer: 0,
       spawnEvery: 0.62,
-      best: 0,
     }
   };
-
-  // best score load
-  try {
-    const b = localStorage.getItem('snowdodge_best');
-    if (b) state.game.best = Number(b) || 0;
-  } catch {}
 
   function puff(x, y, n = 10) {
     for (let i = 0; i < n; i++) {
@@ -134,12 +127,6 @@ export function createGame(canvas, sfx) {
         g.finished = true;
         sfx.beep('triangle', 880, 0.12, 0.06);
         sfx.beep('triangle', 990, 0.10, 0.05);
-
-        const score = Math.round((GOAL_DISTANCE / Math.max(1, g.time)) * 100) / 100;
-        if (score > g.best) {
-          g.best = score;
-          try { localStorage.setItem('snowdodge_best', String(g.best)); } catch {}
-        }
       }
     }
 
