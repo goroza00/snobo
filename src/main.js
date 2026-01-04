@@ -3,7 +3,7 @@ import { createInput } from './input.js';
 import { createGame } from './game.js';
 import { createRenderer } from './render.js';
 
-// PWA: Service Worker登録
+// PWA Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -37,7 +37,6 @@ ui.muteBtn.addEventListener('click', () => {
   ui.muteBtn.textContent = `効果音: ${sfx.enabled ? 'ON' : 'OFF'}`;
 });
 
-// キーPでpause、Enterで開始
 window.addEventListener('keydown', (e) => {
   sfx.resumeIfNeeded();
   const k = e.key.toLowerCase();
@@ -54,11 +53,9 @@ function loop(ts) {
   game.update(dt, input);
   renderer.render(dt);
 
-  // HUD更新
-  const g = game.state.game;
-  const p = game.state.player;
-  ui.distance.textContent = Math.floor(g.distance).toString();
-  ui.speed.textContent = Math.floor(g.speed).toString();
-  ui.hp.textContent = p.hp.toString();
+  // HUD
+  ui.distance.textContent = Math.floor(game.state.game.distance).toString();
+  ui.speed.textContent = Math.floor(game.state.game.speed).toString();
+  ui.hp.textContent = game.state.player.hp.toString();
 }
 requestAnimationFrame(loop);
