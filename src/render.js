@@ -4,97 +4,143 @@ export function createRenderer(canvas, state) {
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
 
+  function drawRetroSky() {
+    // sky gradient
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#79d7ff');
+    g.addColorStop(1, '#d8fbff');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // pixel clouds
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    const clouds = [
+      { x: 160, y: 120, s: 1.1 },
+      { x: 520, y: 90, s: 0.9 },
+      { x: 980, y: 140, s: 1.2 },
+    ];
+    for (const c of clouds) pixelCloud(c.x, c.y, c.s);
+  }
+
+  function pixelCloud(cx, cy, s=1) {
+    const px = 10 * s;
+    const blocks = [
+      [0,0],[1,0],[2,0],[3,0],
+      [-1,1],[0,1],[1,1],[2,1],[3,1],[4,1],
+      [-1,2],[0,2],[1,2],[2,2],[3,2],[4,2],
+      [0,3],[1,3],[2,3],[3,3]
+    ];
+    for (const [bx, by] of blocks) {
+      ctx.fillRect(cx + bx*px, cy + by*px, px, px);
+    }
+  }
+
   function drawSlope() {
     const { laneLeft, laneRight, laneWidth } = state.world;
 
-    ctx.fillStyle = 'rgba(40, 110, 210, 0.08)';
-    ctx.fillRect(0, 0, laneLeft, H);
-    ctx.fillRect(laneRight, 0, W - laneRight, H);
-
+    // lane base
     const grd = ctx.createLinearGradient(0, 0, 0, H);
     grd.addColorStop(0, 'rgba(255,255,255,0.98)');
-    grd.addColorStop(1, 'rgba(220,245,255,0.98)');
+    grd.addColorStop(1, 'rgba(210,245,255,0.98)');
     ctx.fillStyle = grd;
 
     ctx.beginPath();
     ctx.moveTo(laneLeft, 0);
     ctx.lineTo(laneRight, 0);
-    ctx.lineTo(laneRight + 120, H);
-    ctx.lineTo(laneLeft - 120, H);
+    ctx.lineTo(laneRight + 140, H);
+    ctx.lineTo(laneLeft - 140, H);
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = 'rgba(0,0,0,0.10)';
-    ctx.lineWidth = 4;
+    // borders (thick pixel-ish)
+    ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+    ctx.lineWidth = 6;
     ctx.beginPath();
-    ctx.moveTo(laneLeft, 0);  ctx.lineTo(laneLeft - 120, H);
-    ctx.moveTo(laneRight, 0); ctx.lineTo(laneRight + 120, H);
+    ctx.moveTo(laneLeft, 0);
+    ctx.lineTo(laneLeft - 140, H);
+    ctx.moveTo(laneRight, 0);
+    ctx.lineTo(laneRight + 140, H);
     ctx.stroke();
 
     // snow streaks
     const s = state.game.speed;
-    ctx.strokeStyle = 'rgba(80, 160, 255, 0.10)';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 24; i++) {
-      const x = laneLeft + (i / 23) * laneWidth;
-      const offset = (state.game.time * (0.6 + i * 0.015) * s) % H;
+    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+    ctx.lineWidth = 3;
+    for (let i = 0; i < 18; i++) {
+      const x = laneLeft + (i / 17) * laneWidth;
+      const offset = (state.game.time * (0.55 + i * 0.02) * s) % H;
       ctx.beginPath();
       ctx.moveTo(x, -40 + offset);
-      ctx.lineTo(x + 18, 20 + offset);
+      ctx.lineTo(x + 20, 30 + offset);
       ctx.stroke();
     }
   }
 
   function drawObstacle(o) {
+    // “マリオっぽい”＝輪郭を黒で
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = 'rgba(0,0,0,0.75)';
+
     if (o.type === 'tree') {
-      ctx.fillStyle = 'rgba(120, 70, 30, 0.9)';
+      // trunk
+      ctx.fillStyle = o.hit ? 'rgba(140, 90, 50, 0.45)' : 'rgba(140, 90, 50, 0.95)';
       drawRoundedRect(ctx, o.x - o.size * 0.12, o.y + o.size * 0.15, o.size * 0.24, o.size * 0.42, 6);
       ctx.fill();
+      ctx.stroke();
 
-      ctx.fillStyle = o.hit ? 'rgba(80, 160, 90, 0.45)' : 'rgba(40, 140, 80, 0.95)';
+      // leaves (triangle-ish)
+      ctx.fillStyle = o.hit ? 'rgba(60, 160, 90, 0.35)' : 'rgba(30, 170, 90, 0.95)';
       ctx.beginPath();
-      ctx.moveTo(o.x, o.y - o.size * 0.55);
-      ctx.lineTo(o.x - o.size * 0.55, o.y + o.size * 0.2);
-      ctx.lineTo(o.x + o.size * 0.55, o.y + o.size * 0.2);
+      ctx.moveTo(o.x, o.y - o.size * 0.6);
+      ctx.lineTo(o.x - o.size * 0.62, o.y + o.size * 0.25);
+      ctx.lineTo(o.x + o.size * 0.62, o.y + o.size * 0.25);
       ctx.closePath();
       ctx.fill();
+      ctx.stroke();
 
       ctx.beginPath();
-      ctx.moveTo(o.x, o.y - o.size * 0.2);
-      ctx.lineTo(o.x - o.size * 0.45, o.y + o.size * 0.5);
-      ctx.lineTo(o.x + o.size * 0.45, o.y + o.size * 0.5);
+      ctx.moveTo(o.x, o.y - o.size * 0.25);
+      ctx.lineTo(o.x - o.size * 0.52, o.y + o.size * 0.6);
+      ctx.lineTo(o.x + o.size * 0.52, o.y + o.size * 0.6);
       ctx.closePath();
       ctx.fill();
+      ctx.stroke();
     } else if (o.type === 'rock') {
-      ctx.fillStyle = o.hit ? 'rgba(120,120,130,0.55)' : 'rgba(90,90,105,0.95)';
+      ctx.fillStyle = o.hit ? 'rgba(120,120,130,0.45)' : 'rgba(110,110,130,0.95)';
       ctx.beginPath();
-      ctx.ellipse(o.x, o.y, o.size * 0.52, o.size * 0.38, o.drift * 0.02, 0, Math.PI * 2);
+      ctx.ellipse(o.x, o.y, o.size * 0.55, o.size * 0.40, o.drift * 0.02, 0, Math.PI * 2);
       ctx.fill();
+      ctx.stroke();
 
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
       ctx.beginPath();
       ctx.ellipse(o.x - o.size*0.12, o.y - o.size*0.1, o.size*0.18, o.size*0.12, 0, 0, Math.PI*2);
       ctx.fill();
     } else {
-      ctx.strokeStyle = 'rgba(40,40,50,0.8)';
-      ctx.lineWidth = 4;
+      // flag
+      ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+      ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.moveTo(o.x, o.y - o.size*0.6);
-      ctx.lineTo(o.x, o.y + o.size*0.6);
+      ctx.moveTo(o.x, o.y - o.size*0.7);
+      ctx.lineTo(o.x, o.y + o.size*0.7);
       ctx.stroke();
 
-      ctx.fillStyle = o.hit ? 'rgba(255, 180, 60, 0.35)' : 'rgba(255, 120, 20, 0.95)';
+      ctx.fillStyle = o.hit ? 'rgba(255, 200, 60, 0.35)' : 'rgba(255, 140, 40, 0.98)';
+      ctx.strokeStyle = 'rgba(0,0,0,0.75)';
+      ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.moveTo(o.x, o.y - o.size*0.55);
-      ctx.lineTo(o.x + o.size*0.65, o.y - o.size*0.35);
-      ctx.lineTo(o.x, o.y - o.size*0.15);
+      ctx.moveTo(o.x, o.y - o.size*0.6);
+      ctx.lineTo(o.x + o.size*0.72, o.y - o.size*0.38);
+      ctx.lineTo(o.x, o.y - o.size*0.16);
       ctx.closePath();
       ctx.fill();
+      ctx.stroke();
     }
 
-    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.14)';
     ctx.beginPath();
-    ctx.ellipse(o.x, o.y + o.size*0.55, o.size*0.4, o.size*0.16, 0, 0, Math.PI * 2);
+    ctx.ellipse(o.x, o.y + o.size*0.65, o.size*0.45, o.size*0.16, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -107,26 +153,32 @@ export function createRenderer(canvas, state) {
     ctx.translate(p.x, p.y);
     ctx.rotate(p.tilt);
 
-    ctx.fillStyle = 'rgba(20, 60, 120, 0.95)';
-    drawRoundedRect(ctx, -42, 10, 84, 16, 10);
+    // board
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillStyle = 'rgba(255, 60, 60, 0.95)';
+    drawRoundedRect(ctx, -44, 10, 88, 18, 10);
     ctx.fill();
+    ctx.stroke();
 
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    drawRoundedRect(ctx, -34, 13, 68, 4, 6);
-    ctx.fill();
-
-    ctx.fillStyle = 'rgba(40, 40, 50, 0.92)';
+    // rider body (big outline)
+    ctx.fillStyle = 'rgba(30, 80, 220, 0.95)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx.lineWidth = 6;
     ctx.beginPath();
-    ctx.arc(0, -12, 16, 0, Math.PI * 2);
+    ctx.arc(0, -12, 18, 0, Math.PI * 2);
     ctx.fill();
+    ctx.stroke();
 
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    // goggles shine
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
     ctx.beginPath();
     ctx.arc(-6, -16, 3, 0, Math.PI * 2);
     ctx.arc(6, -16, 3, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = 'rgba(255, 60, 60, 0.9)';
+    // scarf
+    ctx.strokeStyle = 'rgba(255, 200, 50, 0.95)';
     ctx.lineWidth = 6;
     ctx.lineCap = 'round';
     ctx.beginPath();
@@ -136,6 +188,7 @@ export function createRenderer(canvas, state) {
 
     ctx.restore();
 
+    // shadow
     ctx.fillStyle = 'rgba(0,0,0,0.14)';
     ctx.beginPath();
     ctx.ellipse(p.x, p.y + 28, 42, 14, 0, 0, Math.PI * 2);
@@ -154,79 +207,66 @@ export function createRenderer(canvas, state) {
       p.vx *= Math.pow(0.01, dt);
       p.vy += 620 * dt;
 
-      ctx.fillStyle = `rgba(255,255,255,${0.65 * a})`;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle = `rgba(255,255,255,${0.7 * a})`;
+      ctx.fillRect(p.x, p.y, p.r*2.2, p.r*2.2); // pixel square
     }
     state.particles = ps.filter(p => p.t < p.life);
   }
 
-  function drawBanner(text, sub) {
-    const W = canvas.width, H = canvas.height;
-    const bw = W * 0.72, bh = 140;
-    const bx = (W - bw) / 2, by = H * 0.18;
-
-    ctx.fillStyle = 'rgba(0,0,0,0.20)';
-    drawRoundedRect(ctx, bx + 6, by + 8, bw, bh, 22);
-    ctx.fill();
-
-    ctx.fillStyle = 'rgba(255,255,255,0.92)';
-    drawRoundedRect(ctx, bx, by, bw, bh, 22);
-    ctx.fill();
-
-    ctx.strokeStyle = 'rgba(0,0,0,0.10)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgba(10,20,40,0.92)';
-    ctx.font = '900 52px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, W/2, by + 52);
-
-    ctx.fillStyle = 'rgba(10,20,40,0.70)';
-    ctx.font = '700 22px system-ui, sans-serif';
-    ctx.fillText(sub, W/2, by + 104);
-  }
-
   function drawGoalGate() {
-    const { GOAL_DISTANCE } = state.game;
-    const progress = clamp(state.game.distance / GOAL_DISTANCE, 0, 1);
+    const progress = clamp(state.game.distance / state.game.GOAL_DISTANCE, 0, 1);
     if (progress <= 0.82 || state.game.gameOver) return;
 
     const t = (progress - 0.82) / 0.18;
     const gy = H * (0.10 + (1 - t) * 0.05);
     const gx = W / 2;
     const gw = state.world.laneWidth * (0.45 + t * 0.25);
-    const gh = 26;
+    const gh = 28;
 
-    ctx.fillStyle = 'rgba(255, 210, 60, 0.85)';
+    ctx.fillStyle = 'rgba(255, 205, 50, 0.95)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx.lineWidth = 6;
     drawRoundedRect(ctx, gx - gw/2, gy, gw, gh, 14);
     ctx.fill();
+    ctx.stroke();
 
-    ctx.fillStyle = 'rgba(20,20,30,0.75)';
-    ctx.font = '900 20px system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.font = '900 22px ui-monospace, monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('GOAL', gx, gy + gh/2);
   }
 
-  function drawProgressBar() {
-    const px = 24, py = 24, pw = W - 48, ph = 14;
-    ctx.fillStyle = 'rgba(0,0,0,0.10)';
-    drawRoundedRect(ctx, px, py, pw, ph, 10);
+  function drawBanner(text, sub) {
+    const bw = W * 0.72, bh = 150;
+    const bx = (W - bw) / 2, by = H * 0.18;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    drawRoundedRect(ctx, bx + 10, by + 10, bw, bh, 16);
     ctx.fill();
 
-    const prog = clamp(state.game.distance / state.game.GOAL_DISTANCE, 0, 1);
-    ctx.fillStyle = 'rgba(20,110,255,0.35)';
-    drawRoundedRect(ctx, px, py, pw * prog, ph, 10);
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+    ctx.lineWidth = 8;
+    drawRoundedRect(ctx, bx, by, bw, bh, 16);
     ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(0,0,0,0.92)';
+    ctx.font = '900 58px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, W/2, by + 60);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.72)';
+    ctx.font = '900 22px ui-monospace, monospace';
+    ctx.fillText(sub, W/2, by + 112);
   }
 
   function render(dt) {
     ctx.clearRect(0, 0, W, H);
 
+    drawRetroSky();
     drawSlope();
     drawGoalGate();
 
@@ -234,12 +274,10 @@ export function createRenderer(canvas, state) {
     drawPlayer();
     if (dt > 0) drawParticles(dt);
 
-    drawProgressBar();
-
     if (!state.game.running) {
-      drawBanner('Snow Dodge', 'スタートボタンで開始');
+      drawBanner('SNOW DODGE', 'ENTER / スタートで開始');
     } else if (state.game.paused) {
-      drawBanner('PAUSED', 'P か 一時停止ボタンで再開');
+      drawBanner('PAUSED', 'P か 一時停止で再開');
     } else if (state.game.finished) {
       drawBanner('GOAL!', 'スタートでリスタート');
     } else if (state.game.gameOver) {
